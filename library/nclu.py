@@ -46,7 +46,7 @@ msg:
 
 def main():
     module = AnsibleModule(argument_spec=dict(
-        net = dict(required=true, type='str')
+        net = dict(required=True, type='str')
     ))
     _changed = True
     command = module.params['_raw_params']
