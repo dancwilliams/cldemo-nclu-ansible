@@ -49,7 +49,7 @@ def main():
         net = dict(required=True, type='str')
     ))
     _changed = True
-    command = module.params['_raw_params']
+    command = module.params['net']
 
     (_rc, pending, _err) = module.run_command("/usr/bin/net pending")
     if _rc or 'ERROR' in pending:
