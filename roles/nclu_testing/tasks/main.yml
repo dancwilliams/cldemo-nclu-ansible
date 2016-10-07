@@ -1,0 +1,18 @@
+
+# install NCLU
+- name: enable EA repo
+  copy: src=sources.list dest=/etc/apt/sources.list
+
+- name: install nclu
+  apt: update_cache=true name=nclu
+
+# This writes configuration to the Quagga configuration file using the
+# information in group_vars/all. The biggest difference between spine and
+# leaf configuration are the prefix lists - leafs should only advertise their
+# neighboring networks, but spines should advertise any networks they accept.
+- name: configure with nclu
+  nclu: net="{{ item }}"
+  with_items:
+      - 'add int swp1'
+      - 'add int swp2'
+  notify: commit changes
