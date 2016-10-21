@@ -11,8 +11,7 @@
 # leaf configuration are the prefix lists - leafs should only advertise their
 # neighboring networks, but spines should advertise any networks they accept.
 - name: configure with nclu
-  nclu: net="{{ item }}"
-  with_items:
-      - 'add int swp1'
-      - 'add int swp2'
-  notify: commit changes
+  nclu_command:
+      commands:
+          - 'add int swp1'
+          - 'add int swp2'

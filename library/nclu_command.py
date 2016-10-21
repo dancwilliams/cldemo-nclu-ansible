@@ -17,7 +17,7 @@
 
 DOCUMENTATION = '''
 ---
-module: nclu
+module: nclu_command
 version_added: "2.2"
 author: "Cumulus Networks (@CumulusNetworks)"
 short_description: Allows running NCLU commands
@@ -27,7 +27,19 @@ description:
 '''
 
 EXAMPLES = '''
-nclu: ip add swp1 10.0.0.0/32
+nclu_command:
+   commands:
+     - ip add swp1 10.0.0.1/32
+     - ip add swp2 10.0.0.2/32
+
+nclu_command:
+   template: |
+       {% for iface in interfaces %}
+       ip add {{iface}} {{address[iface]}}
+       {% endfor %}
+   commit: no
+
+nclu_command: commit=yes
 '''
 
 RETURN = '''
@@ -44,31 +56,52 @@ msg:
 '''
 
 
-def main():
-    module = AnsibleModule(argument_spec=dict(
-        net = dict(required=True, type='str')
-    ))
-    _changed = True
-    command = module.params['net']
-
-    (_rc, pending, _err) = module.run_command("/usr/bin/net pending")
-    if _rc or 'ERROR' in pending:
-        module.fail_json(msg="check pending failed")
-
-    # run the net command
+def command_helper(module, command, errmsg=None):
     (_rc, output, _err) = module.run_command("/usr/bin/net %s"%command)
     if _rc or 'ERROR' in output:
-        module.fail_json(msg=output)
+        module.fail_json(msg=errmsg or output)
+    return output
 
-    (_rc, pending2, _err) = module.run_command("/usr/bin/net pending")
-    if _rc or 'ERROR' in pending2:
-        module.fail_json(msg="check pending failed")
+
+def main():
+    module = AnsibleModule(argument_spec=dict(
+        commands = dict(required=True, type='list'),
+        template = dict(required=True, type='string'),
+        commit = dict(required=False, type='bool', default=True),
+        mutually_exclusive=[('commands', 'template')]
+    ))
+    _changed = True
+    command_list = module.params.get('commands', None)
+    command_string = module.params.get('template', None)
+    commit = module.params.get('commit')
+
+    commands = []
+    if command_list:
+        commands = command_list
+    elif command_string:
+        commands = command_string.splitlines()
+
+    # First, look at the staged commands.
+    before = command_helper(module, "pending", "check pending failed")
+
+    # Run all of the the net commands
+    outputs = []
+    for line in command.splitlines():
+        outputs += [module.run_command("/usr/bin/net %s"%line)]
+    output = "\n".join(output_lines)
 
     # If pending changes changed, report a change.
-    if pending == pending2:
+    after = command_helper(module, "pending", "check pending failed")
+    if before == after:
         _changed = False
     else:
         _changed = True
+
+    # Handle a no command situation.
+    if not commands and after and commit:
+        _changed = True
+    if commit and _changed:
+        command_helper(module, "commit")
 
     module.exit_json(changed=_changed, msg=output)
 
