@@ -60,16 +60,16 @@ def command_helper(module, command, errmsg=None):
     (_rc, output, _err) = module.run_command("/usr/bin/net %s"%command)
     if _rc or 'ERROR' in output:
         module.fail_json(msg=errmsg or output)
-    return output
+    return str(output)
 
 
 def main():
     module = AnsibleModule(argument_spec=dict(
-        commands = dict(required=True, type='list'),
-        template = dict(required=True, type='string'),
-        commit = dict(required=False, type='bool', default=True),
+        commands = dict(required=False, type='list'),
+        template = dict(required=False, type='str'),
+        commit = dict(required=False, type='bool', default=True)),
         mutually_exclusive=[('commands', 'template')]
-    ))
+    )
     _changed = True
     command_list = module.params.get('commands', None)
     command_string = module.params.get('template', None)
@@ -85,9 +85,9 @@ def main():
     before = command_helper(module, "pending", "check pending failed")
 
     # Run all of the the net commands
-    outputs = []
-    for line in command.splitlines():
-        outputs += [module.run_command("/usr/bin/net %s"%line)]
+    output_lines = []
+    for line in commands:
+        output_lines += [module.run_command("/usr/bin/net %s"%line)]
     output = "\n".join(output_lines)
 
     # If pending changes changed, report a change.
