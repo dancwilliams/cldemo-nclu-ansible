@@ -65,8 +65,8 @@ def command_helper(module, command, errmsg=None):
 
 def main():
     module = AnsibleModule(argument_spec=dict(
-        commands = dict(required=True, type='list'),
-        template = dict(required=True, type='string'),
+        commands = dict(required=False, type='list'),
+        template = dict(required=False, type='string'),
         commit = dict(required=False, type='bool', default=True),
         comment = dict(required=False, type='string', default="")),
         mutually_exclusive=[('commands', 'template')]
