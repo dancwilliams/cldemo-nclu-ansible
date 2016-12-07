@@ -64,8 +64,10 @@ def command_helper(module, command, errmsg=None):
 
 def cleanup(pending):
     delimeter1 = "net add/del commands since the last 'net commit'"
+    color1 = '\x1b[94m'
     if delimeter1 in pending:
         pending = pending.split(delimeter1)[0]
+        pending = pending.replace('\x1b[94m', '')
     return pending.strip()
 
 
