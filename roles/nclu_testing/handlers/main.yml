@@ -1,3 +1,7 @@
 
 - name: commit changes
+<<<<<<< HEAD
   nclu_command: commit=yes
+=======
+  nclu_command: commit=true
+>>>>>>> 34cbd759e7715afd58f542ce75359236836e7dfd

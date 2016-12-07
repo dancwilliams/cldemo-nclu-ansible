@@ -65,15 +65,17 @@ def command_helper(module, command, errmsg=None):
 
 def main():
     module = AnsibleModule(argument_spec=dict(
-        commands = dict(required=False, type='list'),
-        template = dict(required=False, type='str'),
-        commit = dict(required=False, type='bool', default=True)),
+        commands = dict(required=True, type='list'),
+        template = dict(required=True, type='string'),
+        commit = dict(required=False, type='bool', default=True),
+        comment = dict(required=False, type='string', default="")),
         mutually_exclusive=[('commands', 'template')]
     )
     _changed = True
     command_list = module.params.get('commands', None)
     command_string = module.params.get('template', None)
     commit = module.params.get('commit')
+    comment = module.params.get('comment')
 
     commands = []
     if command_list:
@@ -101,7 +103,7 @@ def main():
     if not commands and after and commit:
         _changed = True
     if commit and _changed:
-        command_helper(module, "commit")
+        command_helper(module, "commit" if not comment else "commit description '%s'"%comment)
 
     module.exit_json(changed=_changed, msg=output)
 
