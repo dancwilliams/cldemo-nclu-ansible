@@ -62,6 +62,12 @@ def command_helper(module, command, errmsg=None):
         module.fail_json(msg=errmsg or output)
     return str(output)
 
+def cleanup(pending):
+    delimeter1 = "net add/del commands since the last 'net commit'"
+    if delimiter1 in pending:
+        pending = pending.split(delimeter1)[0]
+    return pending.strip()
+
 
 def main():
     module = AnsibleModule(argument_spec=dict(
@@ -84,7 +90,7 @@ def main():
         commands = command_string.splitlines()
 
     # First, look at the staged commands.
-    before = command_helper(module, "pending", "check pending failed")
+    before = cleanup(command_helper(module, "pending", "check pending failed"))
 
     # Run all of the the net commands
     output_lines = []
@@ -93,7 +99,7 @@ def main():
     output = "\n".join(output_lines)
 
     # If pending changes changed, report a change.
-    after = command_helper(module, "pending", "check pending failed")
+    after = cleanup(command_helper(module, "pending", "check pending failed"))
     if before == after:
         _changed = False
     else:
