@@ -112,6 +112,9 @@ def main():
         _changed = True
     if commit and _changed:
         command_helper(module, "commit" if not comment else "commit description '%s'"%comment)
+        last_chance = command_helper(module, "net show commit last")
+        if last_chance == "":
+            _changed = False
 
     module.exit_json(changed=_changed, msg=output)
 
