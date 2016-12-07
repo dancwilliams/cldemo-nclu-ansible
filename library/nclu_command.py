@@ -89,7 +89,7 @@ def main():
     # Run all of the the net commands
     output_lines = []
     for line in commands:
-        output_lines += [module.run_command("/usr/bin/net %s"%line)]
+        output_lines += [command_helper(module, line)]
     output = "\n".join(output_lines)
 
     # If pending changes changed, report a change.
