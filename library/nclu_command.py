@@ -64,7 +64,7 @@ def command_helper(module, command, errmsg=None):
 
 def cleanup(pending):
     delimeter1 = "net add/del commands since the last 'net commit'"
-    if delimiter1 in pending:
+    if delimeter1 in pending:
         pending = pending.split(delimeter1)[0]
     return pending.strip()
 
