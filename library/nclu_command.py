@@ -17,29 +17,31 @@
 
 DOCUMENTATION = '''
 ---
-module: nclu_command
+module: nclu
 version_added: "2.2"
-author: "Cumulus Networks (@CumulusNetworks)"
+author: "Cumulus Networks"
 short_description: Allows running NCLU commands
 description:
-    - Smart interface to NCLU, allows usage of Command Line utilities
-      with proper return values when things are changed or not.
+    - Interface to the Network Command Line Utility, developed to make it easier
+      to configure operating systems running ifupdown2 and Quagga, such as
+      Cumulus Linux.
 '''
 
 EXAMPLES = '''
-nclu_command:
-   commands:
-     - ip add swp1 10.0.0.1/32
-     - ip add swp2 10.0.0.2/32
+nclu:
+    commands:
+        - ip add swp1 10.0.0.1/32
+        - ip add swp2 10.0.0.2/32
 
-nclu_command:
-   template: |
-       {% for iface in interfaces %}
-       ip add {{iface}} {{address[iface]}}
-       {% endfor %}
-   commit: no
+nclu:
+    template: |
+        {% for iface in interfaces %}
+        ip add {{iface}} {{address[iface]}}
+        {% endfor %}
+    commit: true
 
-nclu_command: commit=yes
+nclu:
+    commit: true
 '''
 
 RETURN = '''
@@ -57,12 +59,17 @@ msg:
 
 
 def command_helper(module, command, errmsg=None):
+    """Run a command, catch any nclu errors"""
     (_rc, output, _err) = module.run_command("/usr/bin/net %s"%command)
     if _rc or 'ERROR' in output:
         module.fail_json(msg=errmsg or output)
     return str(output)
 
-def cleanup(pending):
+
+def check_pending(module):
+    """Check the pending diff of the nclu buffer."""
+    pending = command_helper(module, "pending", "check pending failed")
+
     delimeter1 = "net add/del commands since the last 'net commit'"
     color1 = '\x1b[94m'
     if delimeter1 in pending:
@@ -75,15 +82,16 @@ def main():
     module = AnsibleModule(argument_spec=dict(
         commands = dict(required=False, type='list'),
         template = dict(required=False, type='str'),
-        commit = dict(required=False, type='bool', default=True),
-        comment = dict(required=False, type='str', default="")),
-        mutually_exclusive=[('commands', 'template')]
+        commit = dict(required=False, type='str', default=""),
+        atomic = dict(required=False, type='str', default="")),
+        mutually_exclusive=[('commands', 'template'),
+                            ('commit', 'atomic')]
     )
     _changed = True
     command_list = module.params.get('commands', None)
     command_string = module.params.get('template', None)
     commit = module.params.get('commit')
-    comment = module.params.get('comment')
+    atomic = module.params.get('atomic')
 
     commands = []
     if command_list:
@@ -91,8 +99,20 @@ def main():
     elif command_string:
         commands = command_string.splitlines()
 
+    do_commit = False
+    do_abort = False
+    description = ""
+    if commit or atomic:
+        do_commit = True
+        if atomic:
+            do_abort = True
+        description = commit or atomic
+
+    if do_abort:
+        command_helper(module, "abort")
+
     # First, look at the staged commands.
-    before = cleanup(command_helper(module, "pending", "check pending failed"))
+    before = check_pending(module)
 
     # Run all of the the net commands
     output_lines = []
@@ -101,19 +121,16 @@ def main():
     output = "\n".join(output_lines)
 
     # If pending changes changed, report a change.
-    after = cleanup(command_helper(module, "pending", "check pending failed"))
+    after = check_pending(module)
     if before == after:
         _changed = False
     else:
         _changed = True
 
-    # Handle a no command situation.
-    if not commands and after and commit:
-        _changed = True
-    if commit and _changed:
-        command_helper(module, "commit" if not comment else "commit description '%s'"%comment)
-        last_chance = command_helper(module, "show commit last")
-        if last_chance == "":
+    # Do the commit.
+    if do_commit:
+        command_helper(module, "commit description '%s'"%description)
+        if command_helper(module, "show commit last") == "":
             _changed = False
 
     module.exit_json(changed=_changed, msg=output)
