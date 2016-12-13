@@ -40,12 +40,16 @@ options:
             - When present, performs a 'net commit' at the end of the block.
               The option value is a string that will be saved in the commit buffer
               and in the rollback log.
+    abort:
+        description:
+            - Boolean. When true, perform a 'net abort' before the block.
+              This cleans out any uncommitted changes in the buffer.
     atomic:
         description:
             - When present, performs a 'net abort' before the block and a
               'net commit' at the end of the block. The option value is a string
               that will be saved in the commit buffer and in the rollback log.
-              Mutually exclusive with 'commit'.
+              Mutually exclusive with 'commit' and 'abort'.
 '''
 
 EXAMPLES = '''
@@ -112,16 +116,19 @@ def main():
     module = AnsibleModule(argument_spec=dict(
         commands = dict(required=False, type='list'),
         template = dict(required=False, type='str'),
+        abort = dict(required=False, type='bool', default=False)
         commit = dict(required=False, type='str', default=""),
         atomic = dict(required=False, type='str', default="")),
         mutually_exclusive=[('commands', 'template'),
-                            ('commit', 'atomic')]
+                            ('commit', 'atomic'),
+                            ('abort', 'atomic')]
     )
     _changed = True
     command_list = module.params.get('commands', None)
     command_string = module.params.get('template', None)
     commit = module.params.get('commit')
     atomic = module.params.get('atomic')
+    abort = module.params.get('abort')
 
     commands = []
     if command_list:
@@ -130,7 +137,7 @@ def main():
         commands = command_string.splitlines()
 
     do_commit = False
-    do_abort = False
+    do_abort = abort
     description = ""
     if commit or atomic:
         do_commit = True
