@@ -24,24 +24,54 @@ short_description: Allows running NCLU commands
 description:
     - Interface to the Network Command Line Utility, developed to make it easier
       to configure operating systems running ifupdown2 and Quagga, such as
-      Cumulus Linux.
+      Cumulus Linux. Command documentation is available at
+      https://docs.cumulusnetworks.com/display/DOCS/Network+Command+Line+Utility
+options:
+    commands:
+        description:
+            - A list of strings containing the net commands to run.
+    template:
+        description:
+            - A single, multi-line string with jinja2 formatting. This string
+              will be broken by lines, and each line will be run through net.
+              Mutually exclusive with 'commands'.
+    commit:
+        description:
+            - When present, performs a 'net commit' at the end of the block.
+              The option value is a string that will be saved in the commit buffer
+              and in the rollback log.
+    atomic:
+        description:
+            - When present, performs a 'net abort' before the block and a
+              'net commit' at the end of the block. The option value is a string
+              that will be saved in the commit buffer and in the rollback log.
+              Mutually exclusive with 'commit'.
 '''
 
 EXAMPLES = '''
+
+## Add two interfaces without committing any changes
+
 nclu:
     commands:
-        - ip add swp1 10.0.0.1/32
-        - ip add swp2 10.0.0.2/32
+        - add int swp1
+        - add int swp2
+
+## Add 48 interfaces and commit the change.
 
 nclu:
     template: |
-        {% for iface in interfaces %}
-        ip add {{iface}} {{address[iface]}}
+        {% for iface in range(1,49) %}
+        add int swp{{i}}
         {% endfor %}
-    commit: true
+    commit: "Ansible - add swps1-48"
+
+## Atomically add an interface
 
 nclu:
-    commit: true
+    commands:
+        - add int swp1
+    atomic: "Ansible - add swp1"
 '''
 
 RETURN = '''
@@ -129,8 +159,11 @@ def main():
 
     # Do the commit.
     if do_commit:
-        command_helper(module, "commit description '%s'"%description)
-        if command_helper(module, "show commit last") == "":
+        output = command_helper(module, "commit description '%s'"%description)
+        if "commit ignored" in output:
+            _changed = False
+            command_helper(module, "abort")
+        elif command_helper(module, "show commit last") == "":
             _changed = False
 
     module.exit_json(changed=_changed, msg=output)
