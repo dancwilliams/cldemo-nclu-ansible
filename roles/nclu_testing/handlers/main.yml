@@ -1,3 +1,3 @@
 
 - name: commit changes
-  nclu_command: commit=yes
+  nclu: commit="Commit changes"
