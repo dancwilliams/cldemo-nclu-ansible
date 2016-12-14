@@ -113,7 +113,7 @@ def check_pending(module):
 
 
 def run_nclu(module, command_list, command_string, commit, atomic, abort):
-    _changed = True
+    _changed = False
 
     commands = []
     if command_list:
@@ -139,7 +139,7 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort):
     # Run all of the the net commands
     output_lines = []
     for line in commands:
-        output_lines += [command_helper(module, line)]
+        output_lines += [command_helper(module, line.strip())]
     output = "\n".join(output_lines)
 
     # If pending changes changed, report a change.
@@ -151,8 +151,8 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort):
 
     # Do the commit.
     if do_commit:
-        output = command_helper(module, "commit description '%s'"%description)
-        if "commit ignored" in output:
+        result = command_helper(module, "commit description '%s'"%description)
+        if "commit ignored" in result:
             _changed = False
             command_helper(module, "abort")
         elif command_helper(module, "show commit last") == "":
@@ -165,7 +165,7 @@ def main():
     module = AnsibleModule(argument_spec=dict(
         commands = dict(required=False, type='list'),
         template = dict(required=False, type='str'),
-        abort = dict(required=False, type='bool', default=False)
+        abort = dict(required=False, type='bool', default=False),
         commit = dict(required=False, type='str', default=""),
         atomic = dict(required=False, type='str', default="")),
         mutually_exclusive=[('commands', 'template'),
