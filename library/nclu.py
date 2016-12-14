@@ -112,23 +112,8 @@ def check_pending(module):
     return pending.strip()
 
 
-def main():
-    module = AnsibleModule(argument_spec=dict(
-        commands = dict(required=False, type='list'),
-        template = dict(required=False, type='str'),
-        abort = dict(required=False, type='bool', default=False)
-        commit = dict(required=False, type='str', default=""),
-        atomic = dict(required=False, type='str', default="")),
-        mutually_exclusive=[('commands', 'template'),
-                            ('commit', 'atomic'),
-                            ('abort', 'atomic')]
-    )
+def run_nclu(module, command_list, command_string, commit, atomic, abort):
     _changed = True
-    command_list = module.params.get('commands', None)
-    command_string = module.params.get('template', None)
-    commit = module.params.get('commit')
-    atomic = module.params.get('atomic')
-    abort = module.params.get('abort')
 
     commands = []
     if command_list:
@@ -174,6 +159,26 @@ def main():
             _changed = False
 
     module.exit_json(changed=_changed, msg=output)
+
+
+def main():
+    module = AnsibleModule(argument_spec=dict(
+        commands = dict(required=False, type='list'),
+        template = dict(required=False, type='str'),
+        abort = dict(required=False, type='bool', default=False)
+        commit = dict(required=False, type='str', default=""),
+        atomic = dict(required=False, type='str', default="")),
+        mutually_exclusive=[('commands', 'template'),
+                            ('commit', 'atomic'),
+                            ('abort', 'atomic')]
+    )
+    command_list = module.params.get('commands', None)
+    command_string = module.params.get('template', None)
+    commit = module.params.get('commit')
+    atomic = module.params.get('atomic')
+    abort = module.params.get('abort')
+
+    run_nclu(module, command_list, command_string, commit, atomic, abort)
 
 # import module snippets
 from ansible.module_utils.basic import *
