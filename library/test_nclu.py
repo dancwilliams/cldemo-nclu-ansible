@@ -222,7 +222,7 @@ class TestNclu(unittest.TestCase):
 
         #
         nclu.command_helper(module, 'add interface swp1')
-        pending = nclu.show_pending(module)
+        pending = nclu.check_pending(module)
         self.assertTrue('swp1' in pending)
         nclu.command_helper(module, 'abort')
         self.assertFalse('swp1' in pending)
