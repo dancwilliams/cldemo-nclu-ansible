@@ -3,6 +3,7 @@ import unittest
 
 import nclu
 import sys
+import time
 import StringIO
 from ansible.module_utils.basic import *
 
@@ -225,7 +226,8 @@ class TestNclu(unittest.TestCase):
         pending = nclu.check_pending(module)
         self.assertTrue('swp1' in pending)
         nclu.command_helper(module, 'abort')
-        self.assertFalse('swp1' in pending)
+        pending = nclu.check_pending(module)
+        self.assertTrue('swp1' not in pending)
 
         # gymnastics to fix ansible
         sys.stdin = stdin
