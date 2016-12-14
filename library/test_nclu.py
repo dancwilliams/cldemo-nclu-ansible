@@ -1,6 +1,12 @@
+# This test script can be used to test the NCLU module with a fake NCLU shim.
+# On a Cumulus box, you can use test_nclu_vx for proper systems integration
+# testing
+
 import unittest
 
 import nclu
+from ansible.module_utils.basic import *
+
 
 
 class FakeModule(object):
@@ -46,7 +52,14 @@ class FakeModule(object):
         self.last_commit = ""
 
 
-
+def skipUnlessCumulus(original_function):
+    try:
+        my_os = file('/etc/lsb-release').read()
+        if 'cumulus' not in my_os.lower():
+            return unittest.skip('only run on cumulus')
+    except:
+        return unittest.skip('only run on cumulus')
+    return original_function
 
 
 class TestNclu(unittest.TestCase):
@@ -160,3 +173,8 @@ class TestNclu(unittest.TestCase):
                                                   '/usr/bin/net abort'])
         self.assertEqual(len(module.pending), 0)
         self.assertEqual(module.exit_code['changed'], False)
+
+
+    @skipUnlessCumulus
+    def test_vx_command_helper(self):
+        module = AnsibleModule(argument_spec=dict())
