@@ -1,10 +1,9 @@
-# This test script can be used to test the NCLU module with a fake NCLU shim.
-# On a Cumulus box, you can use test_nclu_vx for proper systems integration
-# testing
 
 import unittest
 
 import nclu
+import sys
+import StringIO
 from ansible.module_utils.basic import *
 
 
@@ -52,14 +51,11 @@ class FakeModule(object):
         self.last_commit = ""
 
 
-def skipUnlessCumulus(original_function):
-    try:
-        my_os = file('/etc/lsb-release').read()
-        if 'cumulus' not in my_os.lower():
-            return unittest.skip('only run on cumulus')
-    except:
-        return unittest.skip('only run on cumulus')
-    return original_function
+def skipUnlessNcluInstalled(original_function):
+    if os.path.isfile('/usr/bin/net'):
+        return original_function
+    else:
+        return unittest.skip('only run if nclu is installed')
 
 
 class TestNclu(unittest.TestCase):
@@ -70,7 +66,6 @@ class TestNclu(unittest.TestCase):
 
         result = nclu.command_helper(module, 'add int swp1', 'error out')
         self.assertEqual(module.command_history[-1], "/usr/bin/net add int swp1")
-        self.assertEqual(module.exit_code, {})
         self.assertEqual(result, "")
 
     def test_command_helper_error_code(self):
@@ -79,45 +74,49 @@ class TestNclu(unittest.TestCase):
 
         result = nclu.command_helper(module, 'fake fail command', 'error out')
         self.assertEqual(module.fail_code, {'msg': "error out"})
-        self.assertEqual(module.exit_code, {})
 
     def test_command_helper_error_msg(self):
         module = FakeModule()
-        module.mock_output("/usr/bin/net fake fail command", 0, "ERROR: Command not found", "")
+        module.mock_output("/usr/bin/net fake fail command", 0,
+                           "ERROR: Command not found", "")
 
         result = nclu.command_helper(module, 'fake fail command', 'error out')
         self.assertEqual(module.fail_code, {'msg': "error out"})
-        self.assertEqual(module.exit_code, {})
 
     def test_command_helper_no_error_msg(self):
         module = FakeModule()
-        module.mock_output("/usr/bin/net fake fail command", 0, "ERROR: Command not found", "")
+        module.mock_output("/usr/bin/net fake fail command", 0,
+                           "ERROR: Command not found", "")
 
         result = nclu.command_helper(module, 'fake fail command')
         self.assertEqual(module.fail_code, {'msg': "ERROR: Command not found"})
-        self.assertEqual(module.exit_code, {})
 
     def test_empty_run(self):
         module = FakeModule()
-        nclu.run_nclu(module, None, None, False, "", "")
+        changed, output = nclu.run_nclu(module, None, None, False, "", "")
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net pending'])
-        self.assertEqual(module.exit_code['changed'], False)
+        self.assertEqual(module.fail_code, {})
+        self.assertEqual(changed, False)
 
     def test_command_list(self):
         module = FakeModule()
-        nclu.run_nclu(module, ['add int swp1', 'add int swp2'], None, "", "", False)
+        changed, output = nclu.run_nclu(module, ['add int swp1', 'add int swp2'],
+                                        None, "", "", False)
 
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net add int swp1',
                                                   '/usr/bin/net add int swp2',
                                                   '/usr/bin/net pending'])
         self.assertNotEqual(len(module.pending), 0)
-        self.assertEqual(module.exit_code['changed'], True)
+        self.assertEqual(module.fail_code, {})
+        self.assertEqual(changed, True)
 
     def test_command_list_commit(self):
         module = FakeModule()
-        nclu.run_nclu(module, ['add int swp1', 'add int swp2'], None, "committed", "", False)
+        changed, output = nclu.run_nclu(module,
+                                        ['add int swp1', 'add int swp2'],
+                                        None, "committed", "", False)
 
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net add int swp1',
@@ -126,12 +125,15 @@ class TestNclu(unittest.TestCase):
                                                   "/usr/bin/net commit description 'committed'",
                                                   '/usr/bin/net show commit last'])
         self.assertEqual(len(module.pending), 0)
-        self.assertEqual(module.exit_code['changed'], True)
+        self.assertEqual(module.fail_code, {})
+        self.assertEqual(changed, True)
 
 
     def test_command_atomic(self):
         module = FakeModule()
-        nclu.run_nclu(module, ['add int swp1', 'add int swp2'], None, "", "atomically", False)
+        changed, output = nclu.run_nclu(module,
+                                        ['add int swp1', 'add int swp2'],
+                                        None, "", "atomically", False)
 
         self.assertEqual(module.command_history, ['/usr/bin/net abort',
                                                   '/usr/bin/net pending',
@@ -141,7 +143,8 @@ class TestNclu(unittest.TestCase):
                                                   "/usr/bin/net commit description 'atomically'",
                                                   '/usr/bin/net show commit last'])
         self.assertEqual(len(module.pending), 0)
-        self.assertEqual(module.exit_code['changed'], True)
+        self.assertEqual(module.fail_code, {})
+        self.assertEqual(changed, True)
 
     def test_command_abort_first(self):
         module = FakeModule()
@@ -152,7 +155,9 @@ class TestNclu(unittest.TestCase):
 
     def test_command_template_commit(self):
         module = FakeModule()
-        nclu.run_nclu(module, None, "    add int swp1\n    add int swp2", "committed", "", False)
+        changed, output = nclu.run_nclu(module, None,
+                                        "    add int swp1\n    add int swp2",
+                                        "committed", "", False)
 
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net add int swp1',
@@ -161,20 +166,95 @@ class TestNclu(unittest.TestCase):
                                                   "/usr/bin/net commit description 'committed'",
                                                   '/usr/bin/net show commit last'])
         self.assertEqual(len(module.pending), 0)
-        self.assertEqual(module.exit_code['changed'], True)
+        self.assertEqual(module.fail_code, {})
+        self.assertEqual(changed, True)
 
     def test_commit_ignored(self):
         module = FakeModule()
-        nclu.run_nclu(module, None, None, "ignore me", "", False)
+        changed, output = nclu.run_nclu(module, None, None, "ignore me", "", False)
 
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net pending',
                                                   "/usr/bin/net commit description 'ignore me'",
                                                   '/usr/bin/net abort'])
         self.assertEqual(len(module.pending), 0)
-        self.assertEqual(module.exit_code['changed'], False)
+        self.assertEqual(module.fail_code, {})
+        self.assertEqual(changed, False)
 
 
-    @skipUnlessCumulus
+    @skipUnlessNcluInstalled
     def test_vx_command_helper(self):
+
+        # gymnastics for ansible
+        stdin = sys.stdin
+        argv = sys.argv
+        sys.argv = []
+        sys.stdin = StringIO.StringIO('{"ANSIBLE_MODULE_ARGS": {}}')
+
+        # test
         module = AnsibleModule(argument_spec=dict())
+        nclu.command_helper(module, 'abort')
+        nclu.command_helper(module, 'del interface swp1')
+        nclu.command_helper(module, 'commit')
+        nclu.command_helper(module, 'abort')
+
+
+        # gymnastics to fix ansible
+        sys.stdin = stdin
+        sys.argv = argv
+
+
+    @skipUnlessNcluInstalled
+    def test_vx_show_pending(self):
+
+        # gymnastics for ansible
+        stdin = sys.stdin
+        argv = sys.argv
+        sys.argv = []
+        sys.stdin = StringIO.StringIO('{"ANSIBLE_MODULE_ARGS": {}}')
+
+        # start by doing some cleanup
+        module = AnsibleModule(argument_spec=dict())
+        nclu.command_helper(module, 'abort')
+        nclu.command_helper(module, 'del interface swp1')
+        nclu.command_helper(module, 'commit')
+        nclu.command_helper(module, 'abort')
+
+        #
+        nclu.command_helper(module, 'add interface swp1')
+        pending = nclu.show_pending(module)
+        self.assertTrue('swp1' in pending)
+        nclu.command_helper(module, 'abort')
+        self.assertFalse('swp1' in pending)
+
+        # gymnastics to fix ansible
+        sys.stdin = stdin
+        sys.argv = argv
+
+    @skipUnlessNcluInstalled
+    def test_vx_run_list_twice(self):
+
+        # gymnastics for ansible
+        stdin = sys.stdin
+        argv = sys.argv
+        sys.argv = []
+        sys.stdin = StringIO.StringIO('{"ANSIBLE_MODULE_ARGS": {}}')
+
+        # start by doing some cleanup
+        module = AnsibleModule(argument_spec=dict())
+        nclu.command_helper(module, 'abort')
+        nclu.command_helper(module, 'del interface swp1')
+        nclu.command_helper(module, 'commit')
+        nclu.command_helper(module, 'abort')
+
+        # run the test
+        changed, output = nclu.run_nclu(module, ['add int swp1'],
+                                        None, "", "atomically", False)
+        self.assertEqual(changed, True)
+        changed, output = nclu.run_nclu(module, ['add int swp1'],
+                                        None, "", "atomically", False)
+        self.assertEqual(changed, False)
+
+        # gymnastics to fix ansible
+        sys.stdin = stdin
+        sys.argv = argv

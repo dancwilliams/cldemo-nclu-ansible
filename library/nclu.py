@@ -158,7 +158,7 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort):
         elif command_helper(module, "show commit last") == "":
             _changed = False
 
-    module.exit_json(changed=_changed, msg=output)
+    return _changed, output
 
 
 def main():
@@ -178,7 +178,8 @@ def main():
     atomic = module.params.get('atomic')
     abort = module.params.get('abort')
 
-    run_nclu(module, command_list, command_string, commit, atomic, abort)
+    _changed, output = run_nclu(module, command_list, command_string, commit, atomic, abort)
+    module.exit_json(changed=_changed, msg=output)
 
 # import module snippets
 from ansible.module_utils.basic import *
