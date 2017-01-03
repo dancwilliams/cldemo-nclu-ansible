@@ -161,7 +161,7 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort):
     return _changed, output
 
 
-def main():
+def main(testing=False):
     module = AnsibleModule(argument_spec=dict(
         commands = dict(required=False, type='list'),
         template = dict(required=False, type='str'),
@@ -179,7 +179,10 @@ def main():
     abort = module.params.get('abort')
 
     _changed, output = run_nclu(module, command_list, command_string, commit, atomic, abort)
-    module.exit_json(changed=_changed, msg=output)
+    if not testing:
+        module.exit_json(changed=_changed, msg=output)
+    elif testing:
+        return {"changed": _changed, "msg": output}
 
 # import module snippets
 from ansible.module_utils.basic import *

@@ -10,6 +10,28 @@ from ansible.module_utils.basic import *
 
 
 class FakeModule(object):
+    """Fake NCLU module to check the logic of the ansible module.
+
+    We have two sets of tests: fake and real. Real tests only run if
+    NCLU is installed on the testing machine (it should be a Cumulus VX
+    VM or something like that).
+
+    Fake tests are used to test the logic of the ansible module proper - that
+    the right things are done when certain feedback is received.
+
+    Real tests are used to test regressions against versions of NCLU. This
+    FakeModule mimics the output that is used for screenscraping. If the real
+    output differs, the real tests will catch that.
+
+    To prepare a VX:
+      sudo apt-get update
+      sudo apt-get install python-setuptools git gcc python-dev libssl-dev
+      sudo easy_install pip
+      sudo pip install ansible nose coverage
+      # git the module and cd to the directory
+      nosetests --with-coverage
+    """
+
     def __init__(self, **kwargs):
         self.reset()
 
@@ -20,6 +42,8 @@ class FakeModule(object):
         self.fail_code = kwargs
 
     def run_command(self, command):
+        """Run an NCLU command"""
+
         self.command_history.append(command)
         if command == "/usr/bin/net pending":
             return (0, self.pending, "")
@@ -40,6 +64,8 @@ class FakeModule(object):
             return self.mocks.get(command, (0, "", ""))
 
     def mock_output(self, command, _rc, output, _err):
+        """Prepare a command to mock certain output"""
+
         self.mocks[command] = (_rc, output, _err)
 
     def reset(self):
@@ -256,6 +282,20 @@ class TestNclu(unittest.TestCase):
         changed, output = nclu.run_nclu(module, ['add int swp1'],
                                         None, "", "atomically", False)
         self.assertEqual(changed, False)
+
+        # gymnastics to fix ansible
+        sys.stdin = stdin
+        sys.argv = argv
+
+    @skipUnlessNcluInstalled
+    def test_main(self):
+
+        # gymnastics for ansible
+        stdin = sys.stdin
+        argv = sys.argv
+        sys.argv = []
+        sys.stdin = StringIO.StringIO('{"ANSIBLE_MODULE_ARGS": {}}')
+        nclu.main(testing=True)
 
         # gymnastics to fix ansible
         sys.stdin = stdin
