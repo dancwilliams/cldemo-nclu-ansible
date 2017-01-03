@@ -29,7 +29,10 @@ class FakeModule(object):
       sudo easy_install pip
       sudo pip install ansible nose coverage
       # git the module and cd to the directory
-      nosetests --with-coverage
+      nosetests --with-coverage --cover-package=nclu
+
+    If a real test fails, it means that there is a risk of a version split, and
+    that changing the module will break for old versions of NCLU if not careful.
     """
 
     def __init__(self, **kwargs):
