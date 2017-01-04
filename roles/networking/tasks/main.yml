@@ -1,4 +1,4 @@
-{% set intvars = interfaces[ansible_hostname] %}
+
 
 
 # This task configures /etc/network/interfaces on ifupdown2. The variables for
@@ -9,25 +9,25 @@
       template: |
 
           add interface eth0 address dhcp
-          add loopback lo address {{ intvars.loopback }}/32
+          add loopback lo address {{ interfaces[ansible_hostname].loopback }}/32
 
-          {% for iface in intvars.neighbors %}
+          {% for iface in interfaces[ansible_hostname].neighbors %}
           add interface {{ iface }}
           {% endfor %}
 
-          {% for network in intvars.networks | default(()) %}
-          {% for port in intvars.networks[network].ports %}
+          {% for network in interfaces[ansible_hostname].networks | default(()) %}
+          {% for port in interfaces[ansible_hostname].networks[network].ports %}
           add interface {{ port }}
 
           {% endfor %}
-          add interface {{ network }} bridge-ports {{ " ".join(intvars.networks[network].ports) }}
-          add interface {{ network }} address {{ intvars.networks[network].ip }}
+          add interface {{ network }} bridge-ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
+          add interface {{ network }} address {{ interfaces[ansible_hostname].networks[network].ip }}
           {% endfor %}
 
 
-          add router bgp {{ intvars.asn }}
-          add bgp router-id {{ intvars.loopback }}
-          add bgp network {{ intvars.loopback }}/32
+          add router bgp {{ interfaces[ansible_hostname].asn }}
+          add bgp router-id {{ interfaces[ansible_hostname].loopback }}
+          add bgp network {{ interfaces[ansible_hostname].loopback }}/32
           {% for network in networks %}
           {% if networks[network].source == ansible_hostname %}
               add bgp network {{ network }}
@@ -47,7 +47,7 @@
              add bgp neighbor fabric prefix-list dc-fabric-in in
              add bgp neighbor fabric prefix-list dc-fabric-out out
              net add bgp ipv6 unicast neighbor fabric activate
-            {% for neighbor in intvars.neighbors %}
+            {% for neighbor in interfaces[ansible_hostname].neighbors %}
                 add bgp neighbor {{ neighbor }} peer-group fabric
                 net add bgp ipv6 unicast neighbor {{ neighbor }} activate
             {% endfor %}
@@ -64,7 +64,7 @@
             add ip prefix-list dc-fabric-in seq 500 deny any
             add ip prefix-list dc-fabric-out seq 10 permit 10.0.0.0/24 le 32
             {% for network in networks %}
-            {% if not intvars.get('networks', None) or networks[network].source == ansible_hostname %}
+            {% if not interfaces[ansible_hostname].get('networks', None) or networks[network].source == ansible_hostname %}
             add ip prefix-list dc-fabric-out seq {{ loop.index*10 + 100 }} permit {{ network }}
             {% endif %}
             {% endfor %}
