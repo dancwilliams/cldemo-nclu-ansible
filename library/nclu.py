@@ -103,6 +103,7 @@ def command_helper(module, command, errmsg=None):
 def check_pending(module):
     """Check the pending diff of the nclu buffer."""
     pending = command_helper(module, "pending", "check pending failed")
+    #TODO: when check pending fails, errors are present in potential config
 
     delimeter1 = "net add/del commands since the last 'net commit'"
     color1 = '\x1b[94m'
@@ -135,7 +136,6 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort):
 
     # First, look at the staged commands.
     before = check_pending(module)
-
     # Run all of the the net commands
     output_lines = []
     for line in commands:
