@@ -1,3 +1,0 @@
-
-- name: commit changes
-  nclu: commit="Commit changes"
