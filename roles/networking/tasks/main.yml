@@ -7,48 +7,46 @@
   nclu:
       atomic: "configure all the newtorking"
       template: |
+            add interface eth0 address dhcp
+            add loopback lo address {{ interfaces[ansible_hostname].loopback }}/32
 
-          add interface eth0 address dhcp
-          add loopback lo address {{ interfaces[ansible_hostname].loopback }}/32
+            {% for iface in interfaces[ansible_hostname].neighbors %}
+            add interface {{ iface }}
+            {% endfor %}
 
-          {% for iface in interfaces[ansible_hostname].neighbors %}
-          add interface {{ iface }}
-          {% endfor %}
+            {% for network in interfaces[ansible_hostname].networks | default(()) %}
+            {% for port in interfaces[ansible_hostname].networks[network].ports %}
+            add vlan {{network}}
+            add interface {{ port }} bridge-access {{ network }}
 
-          {% for network in interfaces[ansible_hostname].networks | default(()) %}
-          {% for port in interfaces[ansible_hostname].networks[network].ports %}
-          add vlan {{network}}
-          add interface {{ port }} bridge-access {{ network }}
+            {% endfor %}
+            add bridge bridge-ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
+            add vlan-interface vlan{{ network }} address {{interfaces[ansible_hostname].networks[network].ip}}
+            {% endfor %}
 
-          {% endfor %}
-          add bridge bridge-ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
-          add vlan-interface vlan{{ network }} address {{interfaces[ansible_hostname].networks[network].ip}}
-          {% endfor %}
+            add router bgp {{ interfaces[ansible_hostname].asn }}
+            add bgp router-id {{ interfaces[ansible_hostname].loopback }}
+            add bgp network {{ interfaces[ansible_hostname].loopback }}/32
+            {% for network in networks %}
+            {% if networks[network].source == ansible_hostname %}
+            add bgp network {{ network }}
+            {% endif %}
+            {% endfor %}
 
-
-          add router bgp {{ interfaces[ansible_hostname].asn }}
-          add bgp router-id {{ interfaces[ansible_hostname].loopback }}
-          add bgp network {{ interfaces[ansible_hostname].loopback }}/32
-          {% for network in networks %}
-          {% if networks[network].source == ansible_hostname %}
-              add bgp network {{ network }}
-          {% endif %}
-          {% endfor %}
-
-          add bgp maximum-paths 64
+            add bgp maximum-paths 64
             add bgp bestpath as-path multipath-relax
-             add bgp bestpath compare-routerid
-             add bgp neighbor fabric peer-group
-             add bgp neighbor fabric description Internal Fabric Network
-             add bgp neighbor fabric capability extended-nexthop
-             add bgp neighbor fabric advertisement-interval 0
-             add bgp neighbor fabric timers 1 3
-             add bgp neighbor fabric timers connect 3
-             add bgp neighbor fabric remote-as external
-             add bgp ipv6 unicast neighbor fabric activate
+            add bgp bestpath compare-routerid
+            add bgp neighbor fabric peer-group
+            add bgp neighbor fabric description Internal Fabric Network
+            add bgp neighbor fabric capability extended-nexthop
+            add bgp neighbor fabric advertisement-interval 0
+            add bgp neighbor fabric timers 1 3
+            add bgp neighbor fabric timers connect 3
+            add bgp neighbor fabric remote-as external
+            add bgp ipv6 unicast neighbor fabric activate
             {% for neighbor in interfaces[ansible_hostname].neighbors %}
-                add bgp neighbor {{ neighbor }} peer-group fabric
-                add bgp ipv6 unicast neighbor {{ neighbor }} activate
+            add bgp neighbor {{ neighbor }} peer-group fabric
+            add bgp ipv6 unicast neighbor {{ neighbor }} activate
             {% endfor %}
 
             add ip prefix-list dc-fabric-in seq 10 permit 0.0.0.0/0
@@ -68,7 +66,7 @@
             {% endif %}
             {% endfor %}
 
-             add bgp neighbor fabric prefix-list dc-fabric-in in
-             add bgp neighbor fabric prefix-list dc-fabric-out out
+            add bgp neighbor fabric prefix-list dc-fabric-in in
+            add bgp neighbor fabric prefix-list dc-fabric-out out
 
 #
