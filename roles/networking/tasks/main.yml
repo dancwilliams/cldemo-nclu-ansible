@@ -47,7 +47,7 @@
              add bgp ipv6 unicast neighbor fabric activate
             {% for neighbor in interfaces[ansible_hostname].neighbors %}
                 add bgp neighbor {{ neighbor }} peer-group fabric
-                net add bgp ipv6 unicast neighbor {{ neighbor }} activate
+                add bgp ipv6 unicast neighbor {{ neighbor }} activate
             {% endfor %}
 
             add ip prefix-list dc-fabric-in seq 10 permit 0.0.0.0/0
