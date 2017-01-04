@@ -1,5 +1,7 @@
 ---
-- hosts: leafs
+- hosts:
+    - leafs
+    - spines
   user: cumulus
   become: yes
   become_method: sudo
