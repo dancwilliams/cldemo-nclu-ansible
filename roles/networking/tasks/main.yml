@@ -17,10 +17,12 @@
 
           {% for network in interfaces[ansible_hostname].networks | default(()) %}
           {% for port in interfaces[ansible_hostname].networks[network].ports %}
-          add interface {{ port }}
+          add vlan {{network}}
+          add interface {{ port }} bridge-access {{ network }}
 
           {% endfor %}
-          add  {{ network }} bridge-ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
+          add bridge bridge-ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
+          add vlan-interface vlan{{ network }} address {{interfaces[ansible_hostname].networks[network].address}}
           {% endfor %}
 
 
