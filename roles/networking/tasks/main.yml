@@ -20,8 +20,8 @@
           add interface {{ port }}
 
           {% endfor %}
-          add interface {{ network }} bridge-ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
-          add interface {{ network }} address {{ interfaces[ansible_hostname].networks[network].ip }}
+          add  {{ network }} bridge-ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
+          add  {{ network }} address {{ interfaces[ansible_hostname].networks[network].ip }}
           {% endfor %}
 
 
