@@ -128,7 +128,9 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort):
         do_commit = True
         if atomic is not None:
             do_abort = True
-        description = commit or atomic or "Ansible"
+        description = commit or atomic
+        if not description.strip():
+            description = "Ansible"
 
     if do_abort:
         command_helper(module, "abort")
@@ -165,8 +167,8 @@ def main(testing=False):
         commands = dict(required=False, type='list'),
         template = dict(required=False, type='str'),
         abort = dict(required=False, type='bool', default=False),
-        commit = dict(required=False, type='str', default=None),
-        atomic = dict(required=False, type='str', default=None)),
+        commit = dict(required=False, type='str'),
+        atomic = dict(required=False, type='str')),
         mutually_exclusive=[('commands', 'template'),
                             ('commit', 'atomic'),
                             ('abort', 'atomic')]
@@ -174,8 +176,8 @@ def main(testing=False):
     command_list = module.params.get('commands', None)
     command_string = module.params.get('template', None)
     commit = module.params.get('commit')
-    atomic = module.params.get('atomic')
-    abort = module.params.get('abort')
+    atomic = module.params.get('atomic', None)
+    abort = module.params.get('abort', None)
 
     _changed, output = run_nclu(module, command_list, command_string, commit, atomic, abort)
     if not testing:
