@@ -124,11 +124,11 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort):
     do_commit = False
     do_abort = abort
     description = ""
-    if commit or atomic:
+    if commit is not None or atomic is not None:
         do_commit = True
-        if atomic:
+        if atomic is not None:
             do_abort = True
-        description = commit or atomic
+        description = commit or atomic or "Ansible"
 
     if do_abort:
         command_helper(module, "abort")
@@ -165,8 +165,8 @@ def main(testing=False):
         commands = dict(required=False, type='list'),
         template = dict(required=False, type='str'),
         abort = dict(required=False, type='bool', default=False),
-        commit = dict(required=False, type='str', default=""),
-        atomic = dict(required=False, type='str', default="")),
+        commit = dict(required=False, type='str', default=None),
+        atomic = dict(required=False, type='str', default=None)),
         mutually_exclusive=[('commands', 'template'),
                             ('commit', 'atomic'),
                             ('abort', 'atomic')]
