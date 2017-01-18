@@ -123,7 +123,7 @@ class TestNclu(unittest.TestCase):
 
     def test_empty_run(self):
         module = FakeModule()
-        changed, output = nclu.run_nclu(module, None, None, False, "", "")
+        changed, output = nclu.run_nclu(module, None, None, False, False, False, "")
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net pending'])
         self.assertEqual(module.fail_code, {})
@@ -132,7 +132,7 @@ class TestNclu(unittest.TestCase):
     def test_command_list(self):
         module = FakeModule()
         changed, output = nclu.run_nclu(module, ['add int swp1', 'add int swp2'],
-                                        None, "", "", False)
+                                        None, False, False, False, "")
 
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net add int swp1',
@@ -179,7 +179,7 @@ class TestNclu(unittest.TestCase):
     def test_command_abort_first(self):
         module = FakeModule()
         module.pending = "dirty"
-        nclu.run_nclu(module, None, None, "", "", True)
+        nclu.run_nclu(module, None, None, False, False, True, "")
 
         self.assertEqual(len(module.pending), 0)
 
