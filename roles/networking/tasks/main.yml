@@ -5,7 +5,8 @@
 # which interfaces are neighbors and networks come from the group_vars/all file.
 - name: configure networking
   nclu:
-      atomic: "configure all the newtorking"
+      atomic: true
+      description: "configure all the newtorking"
       template: |
             add interface eth0 address dhcp
             add loopback lo address {{ interfaces[ansible_hostname].loopback }}/32
