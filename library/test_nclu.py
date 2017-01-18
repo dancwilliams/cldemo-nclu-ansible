@@ -146,7 +146,7 @@ class TestNclu(unittest.TestCase):
         module = FakeModule()
         changed, output = nclu.run_nclu(module,
                                         ['add int swp1', 'add int swp2'],
-                                        None, "committed", "", False)
+                                        None, True, False, False, "committed")
 
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net add int swp1',
@@ -163,7 +163,7 @@ class TestNclu(unittest.TestCase):
         module = FakeModule()
         changed, output = nclu.run_nclu(module,
                                         ['add int swp1', 'add int swp2'],
-                                        None, "", "atomically", False)
+                                        None, False, True, False, "atomically")
 
         self.assertEqual(module.command_history, ['/usr/bin/net abort',
                                                   '/usr/bin/net pending',
@@ -187,7 +187,7 @@ class TestNclu(unittest.TestCase):
         module = FakeModule()
         changed, output = nclu.run_nclu(module, None,
                                         "    add int swp1\n    add int swp2",
-                                        "committed", "", False)
+                                        True, False, False, "committed")
 
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net add int swp1',
@@ -201,7 +201,7 @@ class TestNclu(unittest.TestCase):
 
     def test_commit_ignored(self):
         module = FakeModule()
-        changed, output = nclu.run_nclu(module, None, None, "ignore me", "", False)
+        changed, output = nclu.run_nclu(module, None, None, True, False, False, "ignore me")
 
         self.assertEqual(module.command_history, ['/usr/bin/net pending',
                                                   '/usr/bin/net pending',
@@ -280,10 +280,10 @@ class TestNclu(unittest.TestCase):
 
         # run the test
         changed, output = nclu.run_nclu(module, ['add int swp1'],
-                                        None, "", "atomically", False)
+                                        None, False, True, False, "atomically")
         self.assertEqual(changed, True)
         changed, output = nclu.run_nclu(module, ['add int swp1'],
-                                        None, "", "atomically", False)
+                                        None, False, True, False, "atomically")
         self.assertEqual(changed, False)
 
         # gymnastics to fix ansible
