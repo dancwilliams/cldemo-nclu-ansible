@@ -112,7 +112,7 @@ def check_pending(module):
     return pending.strip()
 
 
-def run_nclu(module, command_list, command_string, commit, atomic, abort):
+def run_nclu(module, command_list, command_string, commit, atomic, abort, description):
     _changed = False
 
     commands = []
@@ -123,12 +123,10 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort):
 
     do_commit = False
     do_abort = abort
-    description = ""
     if commit or atomic:
         do_commit = True
         if atomic:
             do_abort = True
-        description = commit or atomic
 
     if do_abort:
         command_helper(module, "abort")
@@ -164,9 +162,10 @@ def main(testing=False):
     module = AnsibleModule(argument_spec=dict(
         commands = dict(required=False, type='list'),
         template = dict(required=False, type='str'),
-        abort = dict(required=False, type='bool', default=False),
-        commit = dict(required=False, type='str', default=""),
-        atomic = dict(required=False, type='str', default="")),
+        description = dict(required=False, type='str', "Ansible-originated commit"),
+        abort = dict(required=False, type='bool', False),
+        commit = dict(required=False, type='bool', False),
+        atomic = dict(required=False, type='bool', False)),
         mutually_exclusive=[('commands', 'template'),
                             ('commit', 'atomic'),
                             ('abort', 'atomic')]
@@ -176,8 +175,9 @@ def main(testing=False):
     commit = module.params.get('commit')
     atomic = module.params.get('atomic')
     abort = module.params.get('abort')
+    description = module.params.get('description')
 
-    _changed, output = run_nclu(module, command_list, command_string, commit, atomic, abort)
+    _changed, output = run_nclu(module, command_list, command_string, commit, atomic, abort, description)
     if not testing:
         module.exit_json(changed=_changed, msg=output)
     elif testing:
