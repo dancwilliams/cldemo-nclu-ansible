@@ -162,10 +162,10 @@ def main(testing=False):
     module = AnsibleModule(argument_spec=dict(
         commands = dict(required=False, type='list'),
         template = dict(required=False, type='str'),
-        description = dict(required=False, type='str', "Ansible-originated commit"),
-        abort = dict(required=False, type='bool', False),
-        commit = dict(required=False, type='bool', False),
-        atomic = dict(required=False, type='bool', False)),
+        description = dict(required=False, type='str', default="Ansible-originated commit"),
+        abort = dict(required=False, type='bool', default=False),
+        commit = dict(required=False, type='bool', default=False),
+        atomic = dict(required=False, type='bool', default=False)),
         mutually_exclusive=[('commands', 'template'),
                             ('commit', 'atomic'),
                             ('abort', 'atomic')]
