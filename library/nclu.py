@@ -37,19 +37,18 @@ options:
               Mutually exclusive with 'commands'.
     commit:
         description:
-            - When present, performs a 'net commit' at the end of the block.
-              The option value is a string that will be saved in the commit buffer
-              and in the rollback log.
+            - When true, performs a 'net commit' at the end of the block.
     abort:
         description:
             - Boolean. When true, perform a 'net abort' before the block.
               This cleans out any uncommitted changes in the buffer.
     atomic:
         description:
-            - When present, performs a 'net abort' before the block and a
-              'net commit' at the end of the block. The option value is a string
-              that will be saved in the commit buffer and in the rollback log.
-              Mutually exclusive with 'commit' and 'abort'.
+            - When true, equivalent to both commit and abort being true.
+    description:
+        description:
+            - Commit description that will be recorded to the commit log if
+              commit or atomic are true.
 '''
 
 EXAMPLES = '''
@@ -68,14 +67,16 @@ nclu:
         {% for iface in range(1,49) %}
         add int swp{{i}}
         {% endfor %}
-    commit: "Ansible - add swps1-48"
+    commit: true
+    description: "Ansible - add swps1-48"
 
 ## Atomically add an interface
 
 nclu:
     commands:
         - add int swp1
-    atomic: "Ansible - add swp1"
+    atomic: true
+    description: "Ansible - add swp1"
 '''
 
 RETURN = '''
