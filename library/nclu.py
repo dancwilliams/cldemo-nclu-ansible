@@ -136,7 +136,7 @@ def run_nclu(module, command_list, command_string, commit, atomic, abort, descri
     _changed = False
 
     commands = get_command_list(command_list, command_string)
-    do_commit, do_abort = get_commit_behavior()
+    do_commit, do_abort = get_commit_behavior(commit, atomic, abort)
 
     if do_abort:
         command_helper(module, "abort")
