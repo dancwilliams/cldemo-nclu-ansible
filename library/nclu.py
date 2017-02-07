@@ -113,21 +113,30 @@ def check_pending(module):
     return pending.strip()
 
 
-def run_nclu(module, command_list, command_string, commit, atomic, abort, description):
-    _changed = False
-
+def get_command_list(command_list, command_string):
     commands = []
     if command_list:
         commands = command_list
     elif command_string:
         commands = command_string.splitlines()
+    return commands
 
+def get_commit_behavior(commit, atomic, abort):
     do_commit = False
     do_abort = abort
     if commit or atomic:
         do_commit = True
         if atomic:
             do_abort = True
+    return do_commit, do_abort
+
+
+
+def run_nclu(module, command_list, command_string, commit, atomic, abort, description):
+    _changed = False
+
+    commands = get_command_list(command_list, command_string)
+    do_commit, do_abort = get_commit_behavior()
 
     if do_abort:
         command_helper(module, "abort")

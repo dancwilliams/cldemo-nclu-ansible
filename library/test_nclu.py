@@ -29,7 +29,7 @@ class FakeModule(object):
       sudo easy_install pip
       sudo pip install ansible nose coverage
       # git the module and cd to the directory
-      nosetests --with-coverage --cover-package=nclu
+      nosetests --with-coverage --cover-package=nclu --cover-erase --cover-branches
 
     If a real test fails, it means that there is a risk of a version split, and
     that changing the module will break for old versions of NCLU if not careful.
@@ -211,6 +211,27 @@ class TestNclu(unittest.TestCase):
         self.assertEqual(module.fail_code, {})
         self.assertEqual(changed, False)
 
+
+    def test_command_list_branches(self):
+        input1 = ["a", "b"]
+        input2 = "a\nb"
+
+        self.assertEqual(nclu.get_command_list(input1, None), input1)
+        self.assertEqual(nclu.get_command_list(None, input2), input1)
+        self.assertEqual(nclu.get_command_list(input1, input2), input1)
+        self.assertEqual(nclu.get_command_list(None, None), [])
+
+
+    def test_commit_behavior_branches(self):
+        #commit, atomic, abort
+        self.assertEqual(nclu.get_commit_behavior(True, True, True),    (True, True))
+        self.assertEqual(nclu.get_commit_behavior(True, True, False),   (True, True))
+        self.assertEqual(nclu.get_commit_behavior(True, False, True),   (True, True))
+        self.assertEqual(nclu.get_commit_behavior(True, False, False),  (True, False))
+        self.assertEqual(nclu.get_commit_behavior(False, True, True),   (True, True))
+        self.assertEqual(nclu.get_commit_behavior(False, True, False),  (True, True))
+        self.assertEqual(nclu.get_commit_behavior(False, False, True),  (False, True))
+        self.assertEqual(nclu.get_commit_behavior(False, False, False), (False, False))
 
     @skipUnlessNcluInstalled
     def test_vx_command_helper(self):
