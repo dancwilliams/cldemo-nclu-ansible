@@ -1,7 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# (c) 2016, Cumulus Networks <ce-ceng@cumulusnetworks.com>
+# (c) 2016-2017, Cumulus Networks <ce-ceng@cumulusnetworks.com>
 #
 # This file is part of Ansible
 # Ansible is free software: you can redistribute it and/or modify
@@ -15,12 +15,15 @@
 # You should have received a copy of the GNU General Public License
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
+ANSIBLE_METADATA = {'status': ['preview'],
+                    'supported_by': 'community',
+                    'version': '1.0'}
 DOCUMENTATION = '''
 ---
 module: nclu
-version_added: "2.2"
+version_added: "2.2.3"
 author: "Cumulus Networks"
-short_description: Allows running NCLU commands
+short_description: Configure network interfaces using NCLU
 description:
     - Interface to the Network Command Line Utility, developed to make it easier
       to configure operating systems running ifupdown2 and Quagga, such as
@@ -113,30 +116,21 @@ def check_pending(module):
     return pending.strip()
 
 
-def get_command_list(command_list, command_string):
+def run_nclu(module, command_list, command_string, commit, atomic, abort, description):
+    _changed = False
+
     commands = []
     if command_list:
         commands = command_list
     elif command_string:
         commands = command_string.splitlines()
-    return commands
 
-def get_commit_behavior(commit, atomic, abort):
     do_commit = False
     do_abort = abort
     if commit or atomic:
         do_commit = True
         if atomic:
             do_abort = True
-    return do_commit, do_abort
-
-
-
-def run_nclu(module, command_list, command_string, commit, atomic, abort, description):
-    _changed = False
-
-    commands = get_command_list(command_list, command_string)
-    do_commit, do_abort = get_commit_behavior(commit, atomic, abort)
 
     if do_abort:
         command_helper(module, "abort")
