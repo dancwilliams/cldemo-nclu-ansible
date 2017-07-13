@@ -11,7 +11,7 @@ interfaces:
         asn: 65011
         networks:
             10:
-                vtep: 100
+                vxlan_id: 100
                 ports: ["swp1"]
         neighbors:
             swp51:
@@ -22,7 +22,7 @@ interfaces:
         asn: 65012
         networks:
             10:
-                vtep: 100
+                vxlan_id: 100
                 ports: ["swp2"]
         neighbors:
             swp51:
