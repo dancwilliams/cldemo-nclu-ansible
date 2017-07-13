@@ -26,8 +26,6 @@
             net add vxlan vxlan10{{ network }} bridge access {{ network }}
             net add bridge bridge ports vxlan10{{ network }}
             net add bridge bridge vids {{ network }}
-            net add vxlan vxlan10{{ network }} vxlan id 1010
-            net add vxlan vxlan10{{ network }} bridge access {{ network }}
             {% endfor %}
 
             add bgp autonomous-system {{ interfaces[ansible_hostname].asn }}
