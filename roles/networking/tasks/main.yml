@@ -17,12 +17,15 @@
 
             {% for network in interfaces[ansible_hostname].networks | default(()) %}
             {% for port in interfaces[ansible_hostname].networks[network].ports %}
-            add vlan {{network}}
+            add vlan {{ network }}
             add interface {{ port }} bridge access {{ network }}
 
             {% endfor %}
             add bridge bridge ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
-            add vlan {{ network }} ip address {{interfaces[ansible_hostname].networks[network].ip}}
+            net add bridge bridge ports vtep{{ network }}
+            net add bridge bridge vids {{ network }}
+            net add vxlan vxlan10{{ network }} vxlan id 1010
+            net add vxlan vxlan10{{ network }} bridge access {{ network }}
             {% endfor %}
 
             add bgp autonomous-system {{ interfaces[ansible_hostname].asn }}

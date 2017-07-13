@@ -11,7 +11,7 @@ interfaces:
         asn: 65011
         networks:
             10:
-                ip: "172.16.1.1/24"
+                vtep: 100
                 ports: ["swp1"]
         neighbors:
             swp51:
@@ -22,7 +22,7 @@ interfaces:
         asn: 65012
         networks:
             10:
-                ip: "172.16.2.1/24"
+                vtep: 100
                 ports: ["swp2"]
         neighbors:
             swp51:
@@ -54,6 +54,6 @@ interfaces:
     server02:
         neighbors:
             eth2:
-                ip: "172.16.2.101"
+                ip: "172.16.1.102"
                 mask: "255.255.255.0"
-                gateway: "172.16.2.1"
+                gateway: "172.16.1.1"
