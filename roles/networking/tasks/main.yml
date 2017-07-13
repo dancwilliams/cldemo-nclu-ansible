@@ -46,7 +46,7 @@
             add bgp evpn neighbor {{ neighbor }} activate 
             {% endfor %}
 
-            {% if interfaces[ansible_hostname].type == leaf %}
+            {% if interfaces[ansible_hostname].type == "leaf" %}
             add bgp evpn advertise-all-vni
             {% endif %}            
 
