@@ -22,7 +22,7 @@
 
             {% endfor %}
             add bridge bridge ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
-            net add bridge bridge ports vtep{{ network }}
+            net add bridge bridge ports vxlan10{{ network }}
             net add bridge bridge vids {{ network }}
             net add vxlan vxlan10{{ network }} vxlan id 1010
             net add vxlan vxlan10{{ network }} bridge access {{ network }}
