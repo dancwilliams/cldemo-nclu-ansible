@@ -28,11 +28,6 @@
             add bgp autonomous-system {{ interfaces[ansible_hostname].asn }}
             add bgp router-id {{ interfaces[ansible_hostname].loopback }}
             add bgp network {{ interfaces[ansible_hostname].loopback }}/32
-            {% for network in networks %}
-            {% if networks[network].source == ansible_hostname %}
-            add bgp network {{ network }}
-            {% endif %}
-            {% endfor %}
 
             add bgp maximum-paths 64
             add bgp bestpath as-path multipath-relax
@@ -48,24 +43,19 @@
             {% for neighbor in interfaces[ansible_hostname].neighbors %}
             add bgp neighbor {{ neighbor }} peer-group fabric
             add bgp ipv6 unicast neighbor {{ neighbor }} activate
+            add bgp evpn neighbor {{ neighbor }} activate 
             {% endfor %}
+
+            {% if interfaces[ansible_hostname].type == leaf %}
+            add bgp evpn advertise-all-vni
+            {% endif %}            
 
             add routing prefix-list ipv4 dc-fabric-in seq 10 permit 0.0.0.0/0
             add routing prefix-list ipv4 dc-fabric-in seq 20 permit 10.0.0.0/24 le 32
-            add routing prefix-list ipv4 dc-fabric-out seq 500 deny any
-
-            {% for network in networks %}
-            {% if networks[network].source != ansible_hostname %}
-            add routing prefix-list ipv4 dc-fabric-in seq {{ loop.index*10 + 100 }} permit {{ network }}
-            {% endif %}
-            {% endfor %}
             add routing prefix-list ipv4 dc-fabric-in seq 500 deny any
-            add routing prefix-list ipv4 dc-fabric-out seq 10 permit 10.0.0.0/24 le 32
-            {% for network in networks %}
-            {% if not interfaces[ansible_hostname].get('networks', None) or networks[network].source == ansible_hostname %}
-            add routing prefix-list ipv4 dc-fabric-out seq {{ loop.index*10 + 100 }} permit {{ network }}
-            {% endif %}
-            {% endfor %}
+
+            add routing prefix-list ipv4 dc-fabric-out seq 20 permit 10.0.0.0/24 le 32
+            add routing prefix-list ipv4 dc-fabric-out seq 500 deny any
 
             add bgp neighbor fabric prefix-list dc-fabric-in in
             add bgp neighbor fabric prefix-list dc-fabric-out out

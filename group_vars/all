@@ -6,6 +6,7 @@ networks:
         source: "leaf02"
 interfaces:
     leaf01:
+        type: leaf
         loopback: "10.0.0.11"
         asn: 65011
         networks:
@@ -16,6 +17,7 @@ interfaces:
             swp51:
             swp52:
     leaf02:
+        type: leaf
         loopback: "10.0.0.12"
         asn: 65012
         networks:
@@ -26,6 +28,7 @@ interfaces:
             swp51:
             swp52:
     spine01:
+        type: spine
         loopback: "10.0.0.21"
         asn: 65020
         neighbors:
@@ -34,6 +37,7 @@ interfaces:
             swp3:
             swp4:
     spine02:
+        type: spine
         loopback: "10.0.0.22"
         asn: 65020
         neighbors:
