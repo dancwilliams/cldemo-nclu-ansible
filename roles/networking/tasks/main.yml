@@ -24,7 +24,7 @@
             add bridge bridge ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
             add vxlan vxlan{{ interfaces[ansible_hostname].networks[network].vxlan_id }}{{ network }} vxlan id {{ interfaces[ansible_hostname].networks[network].vxlan_id }}{{ network }}
             add vxlan vxlan{{ interfaces[ansible_hostname].networks[network].vxlan_id }}{{ network }} bridge access {{ network }}
-            add bridge bridge ports {{ interfaces[ansible_hostname].networks[network].vxlan_id }}{{ network }}
+            add bridge bridge ports vxlan{{ interfaces[ansible_hostname].networks[network].vxlan_id }}{{ network }}
             add bridge bridge vids {{ network }}
             {% endfor %}
 
