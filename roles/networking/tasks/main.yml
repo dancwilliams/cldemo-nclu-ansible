@@ -18,14 +18,14 @@
             {% for network in interfaces[ansible_hostname].networks | default(()) %}
             {% for port in interfaces[ansible_hostname].networks[network].ports %}
             add vlan {{network}}
-            add interface {{ port }} bridge-access {{ network }}
+            add interface {{ port }} bridge access {{ network }}
 
             {% endfor %}
             add bridge bridge-ports {{ " ".join(interfaces[ansible_hostname].networks[network].ports) }}
             add vlan-interface vlan{{ network }} address {{interfaces[ansible_hostname].networks[network].ip}}
             {% endfor %}
 
-            add router bgp {{ interfaces[ansible_hostname].asn }}
+            add bgp autonomous-system {{ interfaces[ansible_hostname].asn }}
             add bgp router-id {{ interfaces[ansible_hostname].loopback }}
             add bgp network {{ interfaces[ansible_hostname].loopback }}/32
             {% for network in networks %}
