@@ -8,8 +8,8 @@
       atomic: true
       description: "configure all the newtorking"
       template: |
-            add interface eth0 address dhcp
-            add loopback lo address {{ interfaces[ansible_hostname].loopback }}/32
+            add interface eth0 ip address dhcp
+            add loopback lo ip address {{ interfaces[ansible_hostname].loopback }}/32
 
             {% for iface in interfaces[ansible_hostname].neighbors %}
             add interface {{ iface }}
