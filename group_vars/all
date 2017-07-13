@@ -27,6 +27,17 @@ interfaces:
         neighbors:
             swp51:
             swp52:
+    leaf03:
+        type: "leaf"
+        loopback: "10.0.0.13"
+        asn: 65012
+        networks:
+            10:
+                vxlan_id: 100
+                ports: ["swp1"]
+        neighbors:
+            swp51:
+            swp52:
     spine01:
         type: "spine"
         loopback: "10.0.0.21"
@@ -55,5 +66,12 @@ interfaces:
         neighbors:
             eth2:
                 ip: "172.16.1.102"
+                mask: "255.255.255.0"
+                gateway: "172.16.1.1"
+
+    server03:
+        neighbors:
+            eth1:
+                ip: "172.16.1.103"
                 mask: "255.255.255.0"
                 gateway: "172.16.1.1"
